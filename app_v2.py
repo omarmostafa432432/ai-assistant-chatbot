@@ -11,7 +11,7 @@ import os
 
 # Page config
 st.set_page_config(
-    page_title="Ask Career AI",
+    page_title="Omar's AI Assistant",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -108,13 +108,15 @@ def initialize_rag_system():
         )
         
         # Create prompt template
-        template = """You are a helpful AI assistant that answers questions about a person's professional background based on their CV and certifications.
+        template = """You are Omar's AI career assistant. You help recruiters and professionals learn about Omar's background, skills, and experience.
 
-Use the following context to answer the question. Be specific and include relevant details like skills, dates, companies, certifications, and projects.
+Use the following context to answer questions about Omar. Be specific and include relevant details like skills, dates, companies, certifications, and projects.
 
-If you cannot find the answer in the context, say "I don't have that information in the documents provided."
+Always refer to Omar in third person (e.g., "Omar has experience in...", "His skills include...", "He worked at...").
 
-Context:
+If you cannot find the answer in the context, say "I don't have that information about Omar in the documents provided."
+
+Context about Omar:
 {context}
 
 Question: {question}
@@ -149,8 +151,8 @@ def main():
     else:
         # Fallback text header if image not found
         st.markdown('<div class="main-header">', unsafe_allow_html=True)
-        st.markdown('<h1 style="color: #1f77b4;">🤖 Ask Career AI</h1>', unsafe_allow_html=True)
-        st.markdown('<p style="color: #666;">Ask me anything about my background, skills, and experience!</p>', unsafe_allow_html=True)
+        st.markdown('<h1 style="color: #1f77b4;">🤖 Omar\'s AI Career Assistant</h1>', unsafe_allow_html=True)
+        st.markdown('<p style="color: #666;">Ask me anything about Omar\'s background, skills, and experience!</p>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
     
     # Initialize system on first load
@@ -186,13 +188,14 @@ def main():
         st.header("💡 Sample Questions")
         
         sample_questions = [
-            "What are my main technical skills?",
-            "Tell me about my work experience",
-            "What certifications do I have?",
-            "Describe my educational background",
-            "What projects have I worked on?",
-            "What programming languages do I know?",
-            "Summarize my professional background"
+            "What are Omar's main technical skills?",
+            "Tell me about Omar's work experience",
+            "What certifications does Omar have?",
+            "Describe Omar's educational background",
+            "What projects has Omar worked on?",
+            "What programming languages does Omar know?",
+            "Summarize Omar's professional background",
+            "What is Omar's latest position?"
         ]
         
         for q in sample_questions:
@@ -220,31 +223,33 @@ def main():
         ---
         
         ### ℹ️ About
-        This AI assistant can answer questions about professional background, skills, experience, certifications, and more!
+        This AI assistant is trained on Omar's professional background and can answer questions about his skills, experience, certifications, education, and projects.
+        
+        **Built by Omar** to showcase AI/ML skills!
         """)
     
     # Welcome message if no chat history
     if len(st.session_state.messages) == 0:
-        st.info("👋 **Welcome!** I'm an AI assistant trained on professional background information. Ask me anything about skills, experience, certifications, or projects!")
+        st.info("👋 **Welcome!** I'm Omar's AI assistant, trained on his professional background. Ask me anything about Omar's skills, experience, certifications, or projects!")
         
         # Show some example questions in the main area
-        st.markdown("### 💬 Example Questions:")
+        st.markdown("### 💬 Try Asking:")
         cols = st.columns(2)
         
         with cols[0]:
             st.markdown("""
-            - What are my main skills?
-            - Tell me about my work experience
-            - What certifications do I have?
-            - Describe my education
+            - What are Omar's main skills?
+            - Tell me about Omar's work experience
+            - What certifications does Omar have?
+            - Describe Omar's education
             """)
         
         with cols[1]:
             st.markdown("""
-            - What projects have I worked on?
-            - What programming languages do I know?
-            - Summarize my background
-            - What is my latest position?
+            - What projects has Omar worked on?
+            - What programming languages does Omar know?
+            - Summarize Omar's background
+            - What is Omar's latest position?
             """)
     
     # Display chat messages
@@ -253,7 +258,7 @@ def main():
             st.markdown(message["content"])
     
     # Chat input
-    if prompt := st.chat_input("Ask me anything..."):
+    if prompt := st.chat_input("Ask me anything about Omar..."):
         # Add user message
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
