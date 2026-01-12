@@ -1,0 +1,97 @@
+Part 1: Personal Profile & Contact Information
+Q: What is the full name and current residence of the candidate? A: His name is Omar Mostafa, and he currently resides in Munich.
+
+Q: What is his educational background and graduation date? A: He studied Mechanical Engineering (B.Sc.) at the University of Duisburg-Essen from October 2016 to July 2021. He was part of the international "International Studies in Engineering" program. He passed his final examination on July 28, 2021.
+
+
+
+Part 2: Detailed Professional Experience
+adesso SE (May 2024 – Present)
+Q: What is his current role and what does it entail? A: He is an Automotive Software Engineer in Munich. His duties include:
+
+Analyzing and coordinating customer requirements.
+
+Planning, implementing, and ensuring the quality of complex Java web applications.
+
+Developing interfaces based on AWS.
+
+Coordinating meetings and tasks.
+
+Accenture (April 2022 – April 2024)
+Q: What was his specific focus while working as a Technology Berater (Associate) at Accenture? A: He specialized in digitalization within the public service sector. His core technical focus was Full-Stack Java development and the advancement of IoT solutions.
+
+
+Q: What technical tasks did he perform at Accenture? A: His project work involved several high-level responsibilities:
+
+Implementing Backend systems using Spring, Spring Boot, and Spring Data for scalable architectures.
+
+Developing User Interfaces (Frontend) using JSF.
+
+Managing the entire lifecycle of SOAP interfaces, including planning, implementation, and maintenance.
+
+Handling database management by maintaining SQL scripts and creating migration scripts to preserve data integrity.
+
+Working with Private Cloud solutions to optimize development and deployment processes.
+
+Managing Jenkins Jobs for automated builds and tests within an agile DevOps framework.
+
+Q: How was his performance evaluated by Accenture? A: He received the highest praise, with the report stating he fulfilled all tasks to "fullest satisfaction". He was noted for his "extraordinary resilience" , "excellent analytical thinking skills" , and a "professional appearance" when dealing with customers.
+
+
+
+
+University of Duisburg-Essen (October 2021 – April 2022)
+Q: What were his contributions as a Research Assistant (Wissenschaftliche Hilfskraft)? A: He worked at the Institute for Product Engineering (IPE). His contributions included:
+
+Developing Digital Twins for energy plants, specifically wind turbines.
+
+Selecting and configuring suitable IoT platforms based on requirements.
+
+Developing standardized software services and data structures for Predictive Maintenance.
+
+Contributing to the development of a system-open Cloud software platform.
+
+Part 3: Certifications & Specialized Training
+AWS Certifications
+Q: What are the details of his most recent AWS certification? A: He is an AWS Certified AI Practitioner, issued on January 9, 2026, and valid until January 9, 2029 (Validation Number: dd49ec8f059641879d323c16684050e8).
+
+
+Q: When did he obtain his Cloud Practitioner certification? A: He became an AWS Certified Cloud Practitioner on June 2, 2022.
+
+
+LoRaWAN Certification
+Q: What did his LoRaWAN certification involve? A: He earned "The Things Certified Fundamentals" from The Things Network on June 15, 2022, with a score of 76%.
+
+Jump Start Program (Accenture)
+Q: What training did he complete during the Accenture Jump Start Program? A: From April 1, 2022, to May 15, 2022, he successfully completed modules in:
+
+Fullstack Fundamentals and Software Architecture.
+
+IoT Protocols and AWS IoT.
+
+
+Computer Vision and Embedded systems.
+
+
+DevOps Fundamentals.
+
+Part 4: Technical Skills Inventory
+Q: List his skills in the following categories based on his CV: A:
+
+
+Databases: PostgreSQL, MySQL, and Oracle.
+
+
+APIs: SOAP and REST.
+
+
+Data Visualization: Grafana and OSISoft PI.
+
+
+Tools/Misc: Docker, Git, Terraform, Maven, JIRA, Confluence, and GitHub Actions.
+
+
+Hardware: Raspberry Pi and Arduino.
+
+
+Methods: Agile working methods and Scrum.
