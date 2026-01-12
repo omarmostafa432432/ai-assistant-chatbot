@@ -4,10 +4,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_groq import ChatGroq
-from langchain.chains import ConversationalRetrievalChain
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts import PromptTemplate
-from langchain.schema import Document
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 import os
 import tempfile
 
@@ -41,31 +40,12 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "vector_store" not in st.session_state:
     st.session_state.vector_store = None
-if "conversation_chain" not in st.session_state:
-    st.session_state.conversation_chain = None
+if "rag_chain" not in st.session_state:
+    st.session_state.rag_chain = None
 
-def create_custom_prompt():
-    """Create a custom prompt for better responses"""
-    template = """You are a helpful AI assistant that answers questions about a person's professional background based on their CV and certifications.
-
-Context from documents:
-{context}
-
-Instructions:
-- Answer the question using ONLY the information from the context above
-- Be specific and include relevant details (skills, dates, companies, certifications, etc.)
-- If the context doesn't contain the answer, say "I don't have that information in the documents provided"
-- Be conversational and professional
-- Don't make up information
-
-Question: {question}
-
-Answer:"""
-    
-    return PromptTemplate(
-        template=template,
-        input_variables=["context", "question"]
-    )
+def format_docs(docs):
+    """Format retrieved documents"""
+    return "\n\n".join(doc.page_content for doc in docs)
 
 def process_files(uploaded_files, groq_api_key):
     """Process uploaded files (PDF and TXT) and create RAG chain"""
@@ -83,13 +63,11 @@ def process_files(uploaded_files, groq_api_key):
             
             try:
                 if file_extension == 'pdf':
-                    # Load PDF
                     loader = PyPDFLoader(tmp_path)
                     docs = loader.load()
                     documents.extend(docs)
                     
                 elif file_extension == 'txt':
-                    # Load TXT
                     loader = TextLoader(tmp_path, encoding='utf-8')
                     docs = loader.load()
                     documents.extend(docs)
@@ -97,7 +75,6 @@ def process_files(uploaded_files, groq_api_key):
             except Exception as e:
                 st.error(f"Error loading {uploaded_file.name}: {e}")
             finally:
-                # Clean up temp file
                 os.unlink(tmp_path)
         
         if not documents:
@@ -107,7 +84,7 @@ def process_files(uploaded_files, groq_api_key):
         total_chars = sum(len(doc.page_content) for doc in documents)
         st.info(f"📊 Extracted {total_chars:,} characters from {len(documents)} document(s)")
         
-        # Split documents into chunks (optimized for CVs)
+        # Split documents into chunks
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=500,
             chunk_overlap=100,
@@ -130,35 +107,45 @@ def process_files(uploaded_files, groq_api_key):
             embedding=embeddings
         )
         
-        # Create LLM with better settings
+        # Create retriever
+        retriever = vector_store.as_retriever(
+            search_type="similarity",
+            search_kwargs={"k": 5}
+        )
+        
+        # Create LLM
         llm = ChatGroq(
             temperature=0.3,
             model_name="llama-3.3-70b-versatile",
             groq_api_key=groq_api_key
         )
         
-        # Create conversation memory
-        memory = ConversationBufferMemory(
-            memory_key="chat_history",
-            return_messages=True,
-            output_key="answer"
-        )
+        # Create prompt template
+        template = """You are a helpful AI assistant that answers questions about a person's professional background based on their CV and certifications.
+
+Use the following context to answer the question. If you cannot find the answer in the context, say "I don't have that information in the documents provided."
+
+Context:
+{context}
+
+Question: {question}
+
+Answer: Provide a detailed, professional response based only on the context above."""
+
+        prompt = ChatPromptTemplate.from_template(template)
         
-        # Create conversation chain with improved retrieval
-        conversation_chain = ConversationalRetrievalChain.from_llm(
-            llm=llm,
-            retriever=vector_store.as_retriever(
-                search_type="similarity",
-                search_kwargs={"k": 5}
-            ),
-            memory=memory,
-            return_source_documents=True,
-            combine_docs_chain_kwargs={
-                "prompt": create_custom_prompt()
+        # Create RAG chain using LCEL
+        rag_chain = (
+            {
+                "context": retriever | format_docs,
+                "question": RunnablePassthrough()
             }
+            | prompt
+            | llm
+            | StrOutputParser()
         )
         
-        return vector_store, conversation_chain
+        return vector_store, rag_chain
 
 def main():
     # Header
@@ -195,9 +182,9 @@ def main():
                 st.error("⚠️ Please upload at least one file!")
             else:
                 try:
-                    vector_store, conversation_chain = process_files(uploaded_files, groq_api_key)
+                    vector_store, rag_chain = process_files(uploaded_files, groq_api_key)
                     st.session_state.vector_store = vector_store
-                    st.session_state.conversation_chain = conversation_chain
+                    st.session_state.rag_chain = rag_chain
                     st.success("✅ Assistant initialized successfully!")
                     st.rerun()
                 except Exception as e:
@@ -219,7 +206,7 @@ def main():
         """)
         
         # Sample questions
-        if st.session_state.conversation_chain:
+        if st.session_state.rag_chain:
             st.subheader("💡 Try asking:")
             sample_questions = [
                 "What are my main skills?",
@@ -231,9 +218,16 @@ def main():
                 if st.button(q, key=q):
                     st.session_state.messages.append({"role": "user", "content": q})
                     st.rerun()
+            
+            st.markdown("---")
+            
+            # Clear button
+            if st.button("🔄 Clear Conversation"):
+                st.session_state.messages = []
+                st.rerun()
     
     # Main chat interface
-    if st.session_state.conversation_chain is None:
+    if st.session_state.rag_chain is None:
         st.info("👈 Please set up your API key and upload your files in the sidebar to get started!")
         
         # Show demo info
@@ -251,7 +245,6 @@ def main():
         st.markdown("---")
         st.markdown("### 📝 Recommended: Use TXT Format")
         st.write("For best results, create a `knowledge_base.txt` file with your information in a structured format.")
-        st.write("See the example file for the recommended structure!")
         
     else:
         # Display chat messages
@@ -270,10 +263,8 @@ def main():
             with st.chat_message("assistant"):
                 with st.spinner("Thinking..."):
                     try:
-                        response = st.session_state.conversation_chain({
-                            "question": prompt
-                        })
-                        answer = response["answer"]
+                        # Get response from RAG chain
+                        answer = st.session_state.rag_chain.invoke(prompt)
                         
                         # Display answer
                         st.markdown(answer)
