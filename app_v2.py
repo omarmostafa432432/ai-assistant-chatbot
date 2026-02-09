@@ -316,8 +316,8 @@ Current Question: {question}"""
 def chat_with_rag_and_tools(user_question):
     """Enhanced chat function with RAG + Function Calling"""
     
-    # Get context from RAG
-    relevant_docs = st.session_state.retriever.get_relevant_documents(user_question)
+    # Get context from RAG using invoke() instead of get_relevant_documents()
+    relevant_docs = st.session_state.retriever.invoke(user_question)
     context = format_docs(relevant_docs)
     
     # Format chat history for context
