@@ -198,29 +198,6 @@ def format_docs(docs):
     """Format retrieved documents"""
     return "\n\n".join(doc.page_content for doc in docs)
 
-def handle_tool_calls(tool_calls):
-    """Execute tool calls and return results"""
-    results = []
-    for tool_call in tool_calls:
-        function_name = tool_call.function.name
-        arguments = json.loads(tool_call.function.arguments)
-        
-        # Call the appropriate function
-        if function_name == "record_contact_info":
-            result = record_contact_info(**arguments)
-        elif function_name == "record_unknown_question":
-            result = record_unknown_question(**arguments)
-        else:
-            result = {"status": "error", "message": "Unknown function"}
-        
-        results.append({
-            "tool_call_id": tool_call.id,
-            "function_name": function_name,
-            "result": result
-        })
-    
-    return results
-
 @st.cache_resource
 def initialize_rag_system():
     """Initialize RAG system with knowledge_base.txt"""
@@ -328,64 +305,49 @@ def chat_with_rag_and_tools(user_question):
         else:
             chat_history_text += f"Assistant: {msg['content']}\n"
     
-    # Create messages for LLM
-    system_prompt = get_enhanced_system_prompt().format(
+    # Create the enhanced prompt with context
+    enhanced_prompt = get_enhanced_system_prompt().format(
         context=context,
         chat_history=chat_history_text,
         question=user_question
     )
     
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_question}
-    ]
+    # Bind tools to LLM
+    llm_with_tools = st.session_state.llm.bind_tools(tools)
     
     # Call LLM with tools
-    response = st.session_state.llm.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=messages,
-        tools=tools,
-        tool_choice="auto"
-    )
+    response = llm_with_tools.invoke(enhanced_prompt)
     
-    # Handle tool calls if any
-    if response.choices[0].finish_reason == "tool_calls":
-        tool_calls = response.choices[0].message.tool_calls
-        tool_results = handle_tool_calls(tool_calls)
+    # Check if there are tool calls
+    if hasattr(response, 'tool_calls') and response.tool_calls:
+        tool_results = []
         
-        # Add assistant message with tool calls
-        messages.append({
-            "role": "assistant",
-            "content": response.choices[0].message.content or "",
-            "tool_calls": [
-                {
-                    "id": tc.id,
-                    "type": "function",
-                    "function": {
-                        "name": tc.function.name,
-                        "arguments": tc.function.arguments
-                    }
-                } for tc in tool_calls
-            ]
-        })
-        
-        # Add tool results
-        for tr in tool_results:
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tr["tool_call_id"],
-                "content": json.dumps(tr["result"])
+        # Execute each tool call
+        for tool_call in response.tool_calls:
+            function_name = tool_call['name']
+            arguments = tool_call['args']
+            
+            # Call the appropriate function
+            if function_name == "record_contact_info":
+                result = record_contact_info(**arguments)
+            elif function_name == "record_unknown_question":
+                result = record_unknown_question(**arguments)
+            else:
+                result = {"status": "error", "message": "Unknown function"}
+            
+            tool_results.append({
+                "function_name": function_name,
+                "result": result
             })
         
-        # Get final response
-        final_response = st.session_state.llm.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages
-        )
+        # Generate final response incorporating tool results
+        final_prompt = f"{enhanced_prompt}\n\nTool results: {json.dumps(tool_results)}\n\nProvide a natural response to the user incorporating these tool executions."
+        final_response = st.session_state.llm.invoke(final_prompt)
         
-        return final_response.choices[0].message.content, tool_results
+        return final_response.content, tool_results
     
-    return response.choices[0].message.content, []
+    # No tool calls, return direct response
+    return response.content, []
 
 def main():
     # Display header image
